@@ -3,6 +3,8 @@
 .idea
 /vendor/
 
+# we don't need composer.lock for this since this is a template
+composer.lock
 
 # ignore WordPress files
 /wp

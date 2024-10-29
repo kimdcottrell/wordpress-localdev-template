@@ -3,18 +3,6 @@
     "description": "",
     "repositories":[
         {
-            "type": "package",
-            "package": {
-                "name": "wordpress/wordpress",
-                "version": "6.6.2",
-                "type": "wordpress-core",
-                "dist": {
-                    "type": "zip",
-                    "url": "https://github.com/WordPress/WordPress/archive/refs/tags/6.6.2.zip"
-                }
-            }
-        },
-        {
             "type":"composer",
             "url":"https://wpackagist.org",
             "only": [
@@ -23,20 +11,6 @@
             ]
         }
     ],
-    "require": {
-        "wordpress/wordpress": "^6.6",
-        "wpackagist-plugin/wordpress-seo":">=7.0.2",
-        "wpackagist-theme/hueman":"*"
-        
-    },
-    "autoload": {
-        "psr-0": {
-            "Acme": "src/"
-        }
-    },
-    "scripts": {
-        "post-install-cmd": "mkdir -p ./wp && cp -r ./vendor/wordpress/wordpress/* ./wp"
-    },
     "extra": {
         "installer-paths": {
             "$comment": "mu-plugins are 'must use' and WordPress will throw fatal errors if they are not in use",
@@ -53,7 +27,16 @@
     },
     "config": {
         "allow-plugins": {
-            "composer/installers": true
+            "composer/installers": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true
         }
+    },
+    "require-dev": {
+        "wp-coding-standards/wpcs": "^3.0"
+    },
+    "require": {
+        "wpackagist-plugin/wordpress-seo":">=7.0.2",
+        "wpackagist-theme/hueman":"*"
+        
     }
 }

@@ -1,2 +1,0 @@
-hmmm
-<?php echo "hi!"; ?>

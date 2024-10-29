@@ -4,5 +4,5 @@
  * SQL queries in this file will be executed the first time the MySQL server is started.
  */
 
-CREATE DATABASE IF NOT EXISTS wordpress_develop;
-CREATE DATABASE IF NOT EXISTS wordpress_develop_tests;
+CREATE DATABASE IF NOT EXISTS dev;
+CREATE DATABASE IF NOT EXISTS testing;
