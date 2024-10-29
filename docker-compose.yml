@@ -4,7 +4,15 @@ services:
   # The web server container.
   ##
   webserver:
-    image: nginx:alpine
+    build:
+      context: ./images
+      dockerfile: webserver.Dockerfile
+      target: dev
+      args:
+        LOCAL_MACHINE_GID: ${LOCAL_MACHINE_GID-1000}
+
+    group_add:
+      - dev
 
     networks:
       - default
@@ -47,7 +55,16 @@ services:
   # The PHP-FPM container that only holds WordPress
   ##
   php:
-    image: wordpress:php${LOCAL_PHP_VERSION-8.3}-fpm
+    build:
+      context: ./images
+      dockerfile: php.Dockerfile
+      target: dev
+      args:
+        LOCAL_PHP_VERSION: ${LOCAL_PHP_VERSION}
+        LOCAL_MACHINE_GID: ${LOCAL_MACHINE_GID-1000}
+
+    group_add:
+      - dev
 
     networks:
       - default
@@ -67,6 +84,10 @@ services:
 
     # The init directive ensures the command runs with a PID > 1, so Ctrl+C works correctly.
     init: true
+
+    # Needed for the loopback events inside WordPress - leaving this out causes them to fail, as seen under Tools > Site Health
+    extra_hosts:
+      - ${SERVER_NAME}:host-gateway
 
 
   ##
@@ -99,10 +120,16 @@ services:
   # WP-CLI
   ##
   cli:
-    image: wordpress:cli-php${LOCAL_PHP_VERSION-8.3}
+    build:
+      context: ./images
+      dockerfile: cli.Dockerfile
+      target: dev
+      args:
+        LOCAL_PHP_VERSION: ${LOCAL_PHP_VERSION}
+        LOCAL_MACHINE_GID: ${LOCAL_MACHINE_GID-1000}
 
-    # This alpine image's user is 82, but debian wordpress is 33. These need to be the same or wp-cli cannot write any files
-    user: 33:33 
+    group_add:
+      - dev
 
     networks:
       - default

@@ -22,3 +22,5 @@ define( 'WP_DEBUG_DISPLAY', getenv_docker('EXTRA_WP_DEBUG_DISPLAY', true) );
 define( 'WP_HOME', 'https://' . getenv_docker('SERVER_NAME', 'test.local.dev') );
 define( 'WP_SITEURL', 'https://' . getenv_docker('SERVER_NAME', 'test.local.dev') );
 
+# Turn this on so scheduled events like WP_Recovery_Mode::clean_expired_keys() don't fail and throw errors to Tools > Site Health
+define( 'DISABLE_WP_CRON', getenv_docker('EXTRA_WP_DEBUG_DISABLE_WP_CRON', false) );

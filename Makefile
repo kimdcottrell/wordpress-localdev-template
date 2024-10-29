@@ -6,7 +6,7 @@ sinclude .env
 .DEFAULT_GOAL := help
 
 init: ## Initial standup of project
-	docker compose up -d
+	docker compose up --build -d
 	docker compose run --rm cli wp core install --title="WordPress Test" --admin_user=admin --admin_password=password --admin_email=test@test.com --skip-email --url=https://${SERVER_NAME}
 
 nuke: ## Kill your entire system's Docker containers and prune all containers, images, and volumes
