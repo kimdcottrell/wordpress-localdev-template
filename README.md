@@ -1,6 +1,10 @@
 # A Localdev: WordPress 6, PHP 8, MySQL/MariaDB, Composer, WP CLI
 
-This is an extremely barebones setup. It literally just starts a dockerized localdev that contains all those technologies and you're free to start a project with those technologies by using this setup.
+Why does this exist?
+
+I couldn't find a docker-compose.yml-based localdev that had these technologies correctly working together. 
+
+This setup - one where you're forced to edit `wp-content` as a monolith - is the one a lot of WordPress-specific hosts prefer, as they want to manage WordPress for you. I wanted a localdev that would better mirror that setup.
 
 ## How to get started
 
