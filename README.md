@@ -114,7 +114,7 @@ That's the magic of its docker image.
 
 - https://hub.docker.com/_/nginx/
 
-## MySQL/MariaDB persistence
+### MySQL/MariaDB persistence
 
 `mysql-init.sql` will fire ONLY once, and that is after the volume is built during `docker compose up`. This allows you to persist the database despite `docker compose down` or `docker compose restart` until you want to fully destroy it via something like `docker compose down --volumes`. 
 
