@@ -22,10 +22,11 @@ services:
       PHP_FPM_CONTAINER: php
 
     volumes:
+      - wordpress:/var/www/html
+      - vendor:/var/www/vendor 
       - ./tools/local-env/nginx.conf.template:/etc/nginx/templates/default.conf.template
-      - wordpress:/var/www/html/
       - ./wp-content:/var/www/html/wp-content # if you leave this out, nginx can't find uploaded files, despite them existing on your local machine
-      - ./vendor:/var/www/vendor 
+      
 
     depends_on:
       php:
@@ -75,8 +76,8 @@ services:
     volumes:
       - ./tools/local-env/php-config.ini:/usr/local/etc/php/conf.d/php-config.ini
       - wordpress:/var/www/html
+      - vendor:/var/www/vendor
       - ./wp-content:/var/www/html/wp-content
-      - ./vendor:/var/www/vendor
       - ./extra-wp-config.php:/var/www/html/extra-wp-config.php
 
     # The init directive ensures the command runs with a PID > 1, so Ctrl+C works correctly.
@@ -139,8 +140,9 @@ services:
 
     volumes:
       - wordpress:/var/www/html
+      - vendor:/var/www/vendor
       - ./wp-content:/var/www/html/wp-content
-      - ./vendor:/var/www/vendor
+      
 
     # The init directive ensures the command runs with a PID > 1, so Ctrl+C works correctly.
     init: true
@@ -151,8 +153,8 @@ services:
 
     volumes:
       - wordpress:/var/www/html
+      - vendor:/var/www/vendor
       - ./wp-content:/var/www/html/wp-content
-      - ./vendor:/var/www/vendor
       - ./composer.json:/var/www/composer.json
       # - ./composer.lock:/var/www/composer.lock # uncomment this when this is no longer a template
 
@@ -161,8 +163,10 @@ services:
 
 
 volumes:
-  wordpress:
   db:
+  vendor:
+  wordpress:
+  
 
 networks:
   # Creating our own network allows us to connect between containers using their service name.

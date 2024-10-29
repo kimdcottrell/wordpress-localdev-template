@@ -1,13 +1,11 @@
 # ignore the usual litanny of dev things
 .env
 .idea
-/vendor/
 
 # we don't need composer.lock for this since this is a template
 composer.lock
 
 # ignore WordPress files
-/wp
 wp-config.php
 
 # ignore composer installed themes, plugins, and mu-plugins
