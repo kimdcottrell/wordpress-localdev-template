@@ -8,4 +8,9 @@ FROM base AS dev
 # this group will exist in all containers, and will be the same group as the user editing code on the local machine.
 # this makes it so the containers and local machine can all play nice with each other.
 ENV LOCAL_MACHINE_GID=1000
-RUN groupadd -g ${LOCAL_MACHINE_GID} dev
+RUN groupmod --gid 1000 www-data
+
+# this exists since if you're not running Docker Desktop, certain folders will change to 1033:1033 on your local machine,
+# rendering them unwritable to the local machine user.
+ENV LOCAL_MACHINE_UID=1000
+RUN usermod --gid 1000 --uid 1000 www-data

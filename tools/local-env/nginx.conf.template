@@ -1,12 +1,19 @@
+# helpful links:
+# https://developer.wordpress.org/advanced-administration/server/web-server/nginx/
+# https://www.digitalocean.com/community/tutorials/understanding-nginx-server-and-location-block-selection-algorithms
 server {
         listen 80;
         listen [::]:80;
+
+        gzip on;
 
         server_name ${SERVER_NAME} www.${SERVER_NAME};
 
         index index.php index.html index.htm;
 
         root /var/www/html;
+
+        error_log  /var/log/nginx/error.log;
 
         location / {
                 try_files $uri $uri/ /index.php$is_args$args;
@@ -24,18 +31,59 @@ server {
                 fastcgi_param PATH_INFO $fastcgi_path_info;
         }
 
-        location ~ /\.ht {
+        # Global restrictions configuration file.
+        # Designed to be included in any server {} block.
+        location = /favicon.ico {
+                log_not_found off;
+                access_log off;
+        }
+
+        location = /robots.txt {
+                allow all;
+                log_not_found off;
+                access_log off;
+        }
+
+        # Deny all attempts to access hidden files such as .htaccess, .htpasswd, .DS_Store (Mac).
+        # Keep logging the requests to parse later (or to pass to firewall utilities such as fail2ban)
+        location ~ /\. {
                 deny all;
         }
 
-        location = /favicon.ico {
-                log_not_found off; access_log off;
+        # Deny access to any files with a .php extension in the uploads directory
+        # Works in sub-directory installs and also in multisite network
+        # Keep logging the requests to parse later (or to pass to firewall utilities such as fail2ban)
+        location ~* /(?:uploads|files)/.*\.php$ {
+                deny all;
         }
-        location = /robots.txt {
-                log_not_found off; access_log off; allow all;
-        }
-        location ~* \.(css|gif|ico|jpeg|jpg|js|png)$ {
+
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico)$ {
                 expires max;
                 log_not_found off;
         }
+
+        # # TODO: The below is presently quite pointless, but I'm keeping it here if I need it for a future multisite.conf.default
+        # expand on this to just read only the uploads in prod: https://wordpress.stackexchange.com/questions/210899/how-to-configure-nginx-to-redirect-requests-to-the-uploads-directory-to-the-prod
+        # location "^(.*)/wp-content/uploads/(.*)$" {
+        #        alias /var/www/html/wp-content/uploads/$2;
+        # }
+
+        # PLUGINS : Enable Rewrite Rules for Yoast SEO SiteMap, source: https://www.digitalocean.com/community/tutorials/how-to-configure-single-and-multiple-wordpress-site-settings-with-nginx#enabling-server-block-files
+        # rewrite ^/sitemap_index\.xml$ /index.php?sitemap=1 last;
+        # rewrite ^/([^/]+?)-sitemap([0-9]+)?\.xml$ /index.php?sitemap=$1&sitemap_n=$2 last;
+        
+        # multisite support and images, possibly
+        # location ~ ^/files/(.*)$ {
+        #        try_files /wp-content/uploads/sites/$blogid/ $uri/wp-includes/ms-files.php?file=$1;
+        #        access_log off; 
+        #        log_not_found off; 
+        #        expires max;
+        # }
+        # location ^~ /sites {
+        #        internal;
+        #        alias /var/www/html/wp-content/uploads/sites;
+        #        access_log off; 
+        #        log_not_found off; 
+        #        expires max;
+        # }
 }

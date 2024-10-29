@@ -13,5 +13,7 @@ USER root
 ENV LOCAL_MACHINE_GID=1000
 RUN addgroup -g ${LOCAL_MACHINE_GID} dev
 
-# swap back to the user used in base image
-USER www-data
+ENV LOCAL_MACHINE_UID=1000
+RUN adduser -D -u ${LOCAL_MACHINE_UID} -G dev dev
+
+USER dev

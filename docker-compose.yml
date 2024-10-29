@@ -10,10 +10,8 @@ services:
       target: dev
       args:
         LOCAL_MACHINE_GID: ${LOCAL_MACHINE_GID-1000}
-
-    group_add:
-      - dev
-
+        LOCAL_MACHINE_UID: ${LOCAL_MACHINE_UID-1000}
+    
     networks:
       - default
       - proxy
@@ -26,7 +24,8 @@ services:
     volumes:
       - ./tools/local-env/nginx.conf.template:/etc/nginx/templates/default.conf.template
       - wordpress:/var/www/html/
-      - ./vendor:/var/www/vendor # TODO: do we need this or does the proxy pass all php requests off in a manner that makes this redundant?
+      - ./wp-content:/var/www/html/wp-content # if you leave this out, nginx can't find uploaded files, despite them existing on your local machine
+      - ./vendor:/var/www/vendor 
 
     depends_on:
       php:
@@ -62,9 +61,7 @@ services:
       args:
         LOCAL_PHP_VERSION: ${LOCAL_PHP_VERSION}
         LOCAL_MACHINE_GID: ${LOCAL_MACHINE_GID-1000}
-
-    group_add:
-      - dev
+        LOCAL_MACHINE_UID: ${LOCAL_MACHINE_UID-1000}
 
     networks:
       - default
@@ -127,9 +124,7 @@ services:
       args:
         LOCAL_PHP_VERSION: ${LOCAL_PHP_VERSION}
         LOCAL_MACHINE_GID: ${LOCAL_MACHINE_GID-1000}
-
-    group_add:
-      - dev
+        LOCAL_MACHINE_UID: ${LOCAL_MACHINE_UID-1000}
 
     networks:
       - default

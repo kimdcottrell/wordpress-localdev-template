@@ -15,6 +15,10 @@ wp-config.php
 /wp-content/plugins/*
 /wp-content/mu-plugins/*
 
+# ignore everything under uploads, but keep the folder so permissions stay correct
+/wp-content/uploads/*
+!/wp-content/uploads/.gitkeep
+
 # if monolith, prefix our themes and plugins so we can exclude them from ignore
 !/wp-content/themes/kdc-*
 !/wp-content/plugins/kdc-*
