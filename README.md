@@ -98,10 +98,29 @@ You can install normal composer packages from https://packagist.org and WP-speci
 
 You will see that WordPress itself is missing from your filesystem. That is done on purpose - it is held in a volume for persistence instead. WordPress is not supposed to be directly modified, but rather, files under `wp-content` are to be edited. Few webhosts allow you to edit WordPress core files, and this localdev mirrors that functionality. 
 
-## Composer vendor as a volume
+### Composer vendor as a volume
 
 Just like WordPress as a volume, `./vendor` is never expected to be editable on your machine. So I've made it a volume. 
 
+### nginx.conf.template mysteriously accepts env vars 
 
+That's the magic of its docker image.
+
+> Using environment variables in nginx configuration (new in 1.19)
+>
+> Out-of-the-box, nginx doesn't support environment variables inside most configuration blocks. But this image has a function, which will extract environment variables before nginx starts.
+>
+> By default, this function reads template files in /etc/nginx/templates/*.template and outputs the result of executing envsubst to /etc/nginx/conf.d.
+
+- https://hub.docker.com/_/nginx/
+
+## MySQL/MariaDB persistence
+
+`mysql-init.sql` will fire ONLY once, and that is after the volume is built during `docker compose up`. This allows you to persist the database despite `docker compose down` or `docker compose restart` until you want to fully destroy it via something like `docker compose down --volumes`. 
+
+> Initializing a fresh instance
+> When a container is started for the first time, a new database with the specified name will be created and initialized with the provided configuration variables. Furthermore, it will execute files with extensions .sh, .sql and .sql.gz that are found in /docker-entrypoint-initdb.d. Files will be executed in alphabetical order. You can easily populate your mysql services by mounting a SQL dump into that directory⁠ and provide custom images⁠ with contributed data. SQL files will be imported by default to the database specified by the MYSQL_DATABASE variable.
+
+- https://hub.docker.com/_/mysql/ (this behavior is identical for MariaDB's image as well)
 
 
