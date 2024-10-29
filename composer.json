@@ -1,0 +1,59 @@
+{
+    "name": "kimdcottrell/wordpress",
+    "description": "",
+    "repositories":[
+        {
+            "type": "package",
+            "package": {
+                "name": "wordpress/wordpress",
+                "version": "6.6.2",
+                "type": "wordpress-core",
+                "dist": {
+                    "type": "zip",
+                    "url": "https://github.com/WordPress/WordPress/archive/refs/tags/6.6.2.zip"
+                }
+            }
+        },
+        {
+            "type":"composer",
+            "url":"https://wpackagist.org",
+            "only": [
+                "wpackagist-plugin/*",
+                "wpackagist-theme/*"
+            ]
+        }
+    ],
+    "require": {
+        "wordpress/wordpress": "^6.6",
+        "wpackagist-plugin/wordpress-seo":">=7.0.2",
+        "wpackagist-theme/hueman":"*"
+        
+    },
+    "autoload": {
+        "psr-0": {
+            "Acme": "src/"
+        }
+    },
+    "scripts": {
+        "post-install-cmd": "mkdir -p ./wp && cp -r ./vendor/wordpress/wordpress/* ./wp"
+    },
+    "extra": {
+        "installer-paths": {
+            "$comment": "mu-plugins are 'must use' and WordPress will throw fatal errors if they are not in use",
+            "wp-content/mu-plugins/{$name}/": [
+            ],
+            "wp-content/plugins/{$name}/": [
+                "type:wordpress-plugin"
+            ],
+            "wp-content/themes/{$name}/": [
+                "type:wordpress-theme"
+            ]
+
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true
+        }
+    }
+}

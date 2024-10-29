@@ -1,0 +1,162 @@
+services:
+
+  ##
+  # The web server container.
+  ##
+  wordpress-develop:
+    image: nginx:alpine
+
+    networks:
+      - wpdevnet
+      - proxy
+
+    environment:
+      - SERVER_NAME=${SERVER_NAME}
+      - PHP_FPM_CONTAINER=${PHP_FPM_CONTAINER-php}
+
+    volumes:
+      - ./tools/local-env/default.template:/etc/nginx/templates/default.conf.template
+      - ./wp:/var/www/html/wp
+      - ./wp-content:/var/www/html/wp-content
+      - ./index.php:/var/www/html/index.php
+      - ./wp-config.php:/var/www/html/wp-config.php
+
+    depends_on:
+      php:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+
+    labels:
+      # Explicitly tell Traefik to expose this container
+      - traefik.enable=true
+      # Tell Traefik you are planning a redirection, and to include the needed middleware
+      - traefik.http.middlewares.wptestlocaldev-redirect-web-secure.redirectscheme.scheme=https
+      - traefik.http.routers.wptestlocaldev.middlewares=wptestlocaldev-redirect-web-secure
+      # The domain the service will respond to, and what is in your /etc/hosts
+      - traefik.http.routers.wptestlocaldev-web.rule=Host(`wp-test.local.dev`)
+      # Allow request only from the predefined entry point named "web"
+      - traefik.http.routers.wptestlocaldev-web.entrypoints=web # this is working with the port 80 entrypoint in the traefik config (a different docker-compose.yml)
+      # Let's redirect!
+      - traefik.http.routers.wptestlocaldev-web-secure.rule=Host(`wp-test.local.dev`)
+      - traefik.http.routers.wptestlocaldev-web-secure.tls=true
+      - traefik.http.routers.wptestlocaldev-web-secure.entrypoints=web-secure
+      # What is essentially in this container's Dockerfile or image's Dockerfile under the `EXPOSE` setting
+      - traefik.http.services.wptestlocaldev-web-secure.loadbalancer.server.port=80 # this can be anything, but mirror the change back to the Dockerfile via EXPOSE      
+  ##
+  # The PHP container.
+  ##
+  php:
+    image: wordpressdevelop/php:${LOCAL_PHP-latest}
+
+    networks:
+      - wpdevnet
+
+    environment:
+      - LOCAL_PHP_XDEBUG=${LOCAL_PHP_XDEBUG-false}
+      - XDEBUG_MODE=${LOCAL_PHP_XDEBUG_MODE-develop,debug}
+      - LOCAL_PHP_MEMCACHED=${LOCAL_PHP_MEMCACHED-false}
+      - PHP_FPM_UID=${PHP_FPM_UID-1000}
+      - PHP_FPM_GID=${PHP_FPM_GID-1000}
+      - GITHUB_REF=${GITHUB_REF-false}
+      - GITHUB_EVENT_NAME=${GITHUB_EVENT_NAME-false}
+
+    volumes:
+      - ./tools/local-env/php-config.ini:/usr/local/etc/php/conf.d/php-config.ini
+      - ./:/var/www
+
+    # Copy or delete the Memcached dropin plugin file as appropriate.
+    command: /bin/sh -c "if [ $LOCAL_PHP_MEMCACHED = true ]; then cp -n /var/www/tests/phpunit/includes/object-cache.php /var/www/wp-content/object-cache.php; else rm -f /var/www/wp-content/object-cache.php; fi && exec php-fpm"
+
+    # The init directive ensures the command runs with a PID > 1, so Ctrl+C works correctly.
+    init: true
+
+
+  ##
+  # The MySQL container.
+  ##
+  mysql:
+    image: ${LOCAL_DB_TYPE-mysql}:${LOCAL_DB_VERSION-latest}
+
+    networks:
+      - wpdevnet
+
+    ports:
+      - "3306"
+
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+
+    volumes:
+      - ./tools/local-env/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+      - mysql:/var/lib/mysql
+
+    # For compatibility with PHP versions that don't support the caching_sha2_password auth plugin used in MySQL 8.0.
+    command: ${LOCAL_DB_AUTH_OPTION-}
+
+    healthcheck:
+      test: [ "CMD-SHELL", "if [ \"$LOCAL_DB_TYPE\" = \"mariadb\" ]; then mariadb-admin ping -h localhost; else mysqladmin ping -h localhost; fi" ]
+      timeout: 5s
+      interval: 5s
+      retries: 10
+
+  ##
+  # The WP CLI container.
+  ##
+  cli:
+    image: wordpress:cli
+
+    networks:
+      - wpdevnet
+
+    environment:
+      - LOCAL_PHP_XDEBUG=${LOCAL_PHP_XDEBUG-false}
+      - LOCAL_PHP_MEMCACHED=${LOCAL_PHP_MEMCACHED-false}
+      - PHP_FPM_UID=${PHP_FPM_UID-1000}
+      - PHP_FPM_GID=${PHP_FPM_GID-1000}
+
+    volumes:
+      - ./:/var/www
+
+    working_dir: /var/www
+
+    # The init directive ensures the command runs with a PID > 1, so Ctrl+C works correctly.
+    init: true
+
+    depends_on:
+      php:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+
+    # You only need to use this if running usernsmap in your docker.conf
+    user: root
+
+    
+
+  ##
+  # The Memcached container.
+  ##
+  memcached:
+    image: memcached
+
+    networks:
+      - wpdevnet
+
+    ports:
+      - 11211:11211
+
+    depends_on:
+      php:
+        condition: service_started
+
+volumes:
+  # So that sites aren't wiped every time containers are restarted, MySQL uses a persistent volume.
+  mysql: {}
+
+networks:
+  # Creating our own network allows us to connect between containers using their service name.
+  wpdevnet:
+    driver: bridge
+  proxy:
+    external: true

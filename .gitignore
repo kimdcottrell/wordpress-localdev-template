@@ -1,0 +1,18 @@
+# ignore the usual litanny of dev things
+.env
+.idea
+/vendor/
+
+
+# ignore WordPress files
+/wp
+wp-config.php
+
+# ignore composer installed themes, plugins, and mu-plugins
+/wp-content/themes/*
+/wp-content/plugins/*
+/wp-content/mu-plugins/*
+
+# if monolith, prefix our themes and plugins so we can exclude them from ignore
+!/wp-content/themes/kdc-*
+!/wp-content/plugins/kdc-*
