@@ -9,6 +9,10 @@
                 "wpackagist-plugin/*",
                 "wpackagist-theme/*"
             ]
+        },
+        {
+            "type":"composer",
+            "url":"https://composer.advancedcustomfields.com"
         }
     ],
     "extra": {
@@ -17,7 +21,8 @@
             "wp-content/mu-plugins/{$name}/": [
             ],
             "wp-content/plugins/{$name}/": [
-                "type:wordpress-plugin"
+                "type:wordpress-plugin",
+                "wpengine/advanced-custom-fields"
             ],
             "wp-content/themes/{$name}/": [
                 "type:wordpress-theme"
@@ -36,7 +41,7 @@
     },
     "require": {
         "wpackagist-plugin/wordpress-seo":">=7.0.2",
-        "wpackagist-theme/hueman":"*"
-        
+        "wpackagist-theme/hueman":"*",
+        "wpengine/advanced-custom-fields": "^6"
     }
 }

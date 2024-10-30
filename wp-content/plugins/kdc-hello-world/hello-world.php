@@ -19,7 +19,7 @@ add_action( 'admin_menu', function() {
 
 add_action('init', function() {
 	register_post_type('landing_page', [
-		'label' => __('Landing page', 'txtdomain'),
+		'label' => __('Landing Pages', 'txtdomain'),
 		'public' => true,
 		'menu_position' => 5,
 		'menu_icon' => 'dashicons-groups', # https://developer.wordpress.org/resource/dashicons/#editor-paste-text
@@ -41,7 +41,7 @@ add_action('init', function() {
 	]);
  
 	register_taxonomy('landing_page_audience', ['landing_page'], [ # declare the relationship part 2/3
-		'label' => __('Audience', 'txtdomain'),
+		'label' => __('Audiences', 'txtdomain'),
 		'hierarchical' => true,
 		'rewrite' => ['slug' => 'landing-page-audience'],
 		'show_admin_column' => true,
