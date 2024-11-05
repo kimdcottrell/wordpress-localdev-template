@@ -25,4 +25,4 @@ function __run() #(step, name, cmd)
     fi
 }
 
-__run "1/1" "PHP Linter. It will attempt fixes, then will generate a report of things you must manually fix. " "docker compose run -T --rm php bash -c \"../vendor/bin/phpcbf --standard=WordPress wp-content/*/kdc-*; ../vendor/bin/phpcs -w --standard=WordPress wp-content/*/kdc-*\""
+__run "1/1" "PHP Linter. It will attempt fixes, then may generate a report of things you must manually fix. " "docker compose run -T --rm php bash -c \"../vendor/bin/phpcbf --standard=WordPress wp-content/*/kdc-*; ../vendor/bin/phpcs -w --standard=WordPress wp-content/*/kdc-*\""
