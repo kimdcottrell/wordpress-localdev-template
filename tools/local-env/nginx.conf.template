@@ -42,6 +42,9 @@ server {
                 allow all;
                 log_not_found off;
                 access_log off;
+                # allow for robots.txt to show up at /robots.txt despite living at /wp-content/themes/*/robots.txt
+                # for production, either repeat this rule or move robots.txt to your http root
+                alias /var/www/html/wp-content/themes/kdc-twentytwentyfour/robots.txt;
         }
 
         # Deny all attempts to access hidden files such as .htaccess, .htpasswd, .DS_Store (Mac).
