@@ -8,21 +8,29 @@ This setup - one where you're forced to edit `wp-content` as a monolith - is the
 
 ## How to get started
 
-### Setup localdev proxy
+### Setup localdev proxy 
 
-Follow the directions here: https://kimdcottrell.com/posts/5-steps-to-achieving-https-and-domain-names-for-docker-local-development-envs/
-
-That proxy is a completely different application that needs to run at the same time as this application. It is what enables you to visit the resulting application as something like https://test.local.dev in your browser.
+Install the Traefik reverse proxy: https://kimdcottrell.com/posts/5-steps-to-achieving-https-and-domain-names-for-docker-local-development-envs/ It is what enables you to visit the resulting application as something like https://test.local.dev in your browser.
 
 ### Setup this application
 
 ```
-# First, clone it into a folder of your choice
+# Ensure that you're running localdev-proxy
+cd ~/path/to/localdev-proxy
+docker compose up -d
+docker ps -a # you should see the containers up and running
+
+# Setup your desired url in /etc/hosts
+sudo vim /etc/hosts
+# 127.0.0.1 test.local.dev
+# these site names should end in .local.dev or whatever you set your certs to support
+
+# Clone it into a folder of your choice
 git clone git@github.com:kimdcottrell/wordpress-localdev-template.git ./your-folder-here
 
 # Copy the .env.sample into a real .env
 cp .env.sample .env
-
+# make sure the same entry in /etc/hosts is set as the value for SERVER_NAME 
 # Take a minute to review what is in the .env and create your own salts
 
 # Finally, run a command in the Makefile
@@ -46,6 +54,10 @@ Uncomment this line in your `docker-compose.yml`:
 # - ./composer.lock:/var/www/composer.lock # uncomment this when this is no longer a template
 ```
 
+Grep for all instances of `kdc-` and change them to whatever you want. That is just an identifier to help stop your custom plugins and themes from being ignored in git - the identifier can be whatever.
+
+Review the files under `tools/local-env/git-hooks/*` and see if you want to replace the files of the same name in `.git/hooks/*`. They contain things like an automatic linter on pre-commit and such.
+
 ## How to use it
 
 Everything is editable. This projects expects you to run WordPress as a single-site, not a multisite. It expects that the resulting project will be a monolith in terms of code architecture. 
@@ -64,7 +76,7 @@ docker compose exec php bash
 
 # for a one liner that returns you back to the host machine
 # btw, this is how you'd run any tooling executable you install through composer
-docker compose exec php bash -c "../vendor/bin/phpcs --standard=WordPress wp-load.php" 
+docker compose exec php bash -c "../vendor/bin/phpcbf --standard=WordPress wp-content/*/kdc-*" 
 ```
 
 The containers that should stop after `docker compose up` are `composer` and `cli`. All that `docker compose up` is doing in this situation is building them so they exist in the docker cache when you run them later.
@@ -127,4 +139,22 @@ That's the magic of its docker image.
 
 - https://hub.docker.com/_/mysql/ (this behavior is identical for MariaDB's image as well)
 
+### Why not run git in a container?
 
+Docker containers require you to mount local directories into your containers. Most implementations of `git` require ssh. That means that in order to get `git` to work within a container, you have to mount your `~/.ssh` folder, or at least specific files within it.
+
+Containers run as usually alpine or debian, not OSX or Linux. `~/.ssh/config` may have syntax that specifically only works in your operating system.
+
+Docker containers get really weird about permissions depending on the implementation - e.g. Docker Engine vs Docker Desktop on Linux. SSH is also really restricted in the permissions department, requiring `600` and `644` for the private keys and public keys respectively. 
+
+This all means that you have to do at least the following:
+
+- Have Docker run at the same level as the user who can access the files within an `~/.ssh` dir
+- Mount in specifically the private and public keys needed by git
+- Write a specific ssh config for your container
+- Write a specific authorized_keys for your container
+- Set the mounted files to read-only, lest you destroy your private/public keys accidentally 
+
+I have found that trying to manage all the above across a team only means that something _will_ go wrong, either thanks to a miconfiguration as someone tries to correct for issues that arise, or because Docker Desktop glitches. I have seen people delete their ssh configs and authorized_keys accidentally. I have seen keys turn into blank files.  
+
+**I do not recommend mounting any part of your `~/.ssh` folder into a container** because of such things. 

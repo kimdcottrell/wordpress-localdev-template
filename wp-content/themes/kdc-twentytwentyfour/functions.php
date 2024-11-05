@@ -1,17 +1,27 @@
 <?php
-define('TEXT_DOMAIN', 'kdc-ttfour');
+/**
+ * KDC Twenty Twenty-Four functions and definitions
+ *
+ * @package KDC Twenty Twenty-Four
+ * @since Twenty Twenty-Four 1.0
+ */
 
-add_action( 'wp_enqueue_scripts', function() {
-    wp_enqueue_style( 
-        TEXT_DOMAIN . '-style', 
-        get_stylesheet_uri()
-    );
+define( 'TEXT_DOMAIN', 'kdc-ttfour' );
 
-    // add in the parent stylesheet
-    wp_enqueue_style( 
-        TEXT_DOMAIN . '-parent-style', 
-        get_parent_theme_file_uri( 'style.css' )
-    );
-});
+add_action(
+	'wp_enqueue_scripts',
+	function () {
+		wp_enqueue_style(
+			TEXT_DOMAIN . '-style',
+			get_stylesheet_uri(),
+			ver: '0.0.1'
+		);
 
-
+		// add in the parent stylesheet.
+		wp_enqueue_style(
+			TEXT_DOMAIN . '-parent-style',
+			get_parent_theme_file_uri( 'style.css' ),
+			ver: '0.0.1'
+		);
+	}
+);
