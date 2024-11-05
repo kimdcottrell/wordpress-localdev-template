@@ -6,8 +6,8 @@
  * Author:          kimdcottrell
  * Author URI:      https://kimdcottrell.com
  * Text Domain:     kdc-hello-world
- * 
- * @package			KDC Hello World
+ *
+ * @package         KDC Hello World
  **/
 
 define( 'KDC_HW__PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
