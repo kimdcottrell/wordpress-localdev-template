@@ -1,5 +1,6 @@
 {
-    "name": "kimdcottrell/wordpress",
+    "name": "kdc/wordpress",
+    "version": "1.0.0",
     "description": "",
     "repositories":[
         {

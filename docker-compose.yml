@@ -75,6 +75,7 @@ services:
 
     volumes:
       - ./tools/local-env/php-config.ini:/usr/local/etc/php/conf.d/php-config.ini
+      - ./tools/local-env/phpcs.xml.dist:/var/www/phpcs.xml.dist
       - wordpress:/var/www/html
       - vendor:/var/www/vendor
       - ./wp-content:/var/www/html/wp-content
@@ -92,7 +93,7 @@ services:
   # The database container. Either MySQL or MariaDB
   ##
   db:
-    image: ${LOCAL_DB_TYPE-mysql}:${LOCAL_DB_VERSION-latest}
+    image: mariadb:${LOCAL_DB_VERSION-latest}
 
     networks:
       - default
@@ -101,14 +102,16 @@ services:
       - "3306"
 
     environment:
-      MYSQL_ROOT_PASSWORD: password
+      MARIADB_USER: ${WORDPRESS_DB_USER}
+      MARIADB_ROOT_PASSWORD: ${WORDPRESS_DB_PASSWORD}
+      MARIADB_DATABASE: ${WORDPRESS_DB_NAME}
 
     volumes:
       - ./tools/local-env/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
       - db:/var/lib/mysql
 
     healthcheck:
-      test: [ "CMD-SHELL", "if [ \"$LOCAL_DB_TYPE\" = \"mariadb\" ]; then mariadb-admin ping -h localhost; else mysqladmin ping -h localhost; fi" ]
+      test: [ "CMD-SHELL", "mariadb-admin --password=${WORDPRESS_DB_PASSWORD} ping -h localhost" ]
       timeout: 5s
       interval: 5s
       retries: 10
@@ -128,7 +131,7 @@ services:
         LOCAL_MACHINE_UID: ${LOCAL_MACHINE_UID-1000}
     
     # this is not ran when you run the container like `docker compose run cli bash`
-    command: wp core install --url=${SERVER_NAME} --title=Example --admin_user=admin --admin_password=password --admin_email=admin@${SERVER_NAME}
+    command: wp core install --url=${SERVER_NAME} --title="WordPress Test" --admin_user=admin --admin_password=password --admin_email=admin@${SERVER_NAME} --skip-email
 
     networks:
       - default

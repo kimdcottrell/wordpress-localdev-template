@@ -1,4 +1,4 @@
-# A Localdev: WordPress 6, PHP 8, MySQL/MariaDB, Composer, WP CLI
+# A Localdev: WordPress 6, PHP 8, MySQL/MariaDB, Composer, WP CLI, & WP-Scripts
 
 Why does this exist?
 
@@ -33,8 +33,8 @@ cp .env.sample .env
 # make sure the same entry in /etc/hosts is set as the value for SERVER_NAME 
 # Take a minute to review what is in the .env and create your own salts
 
-# Finally, run a command in the Makefile
-make init
+# Finally, spin up the project
+docker compose up -d
 ```
 
 You should now be able to visit something like https://test.local.dev in your browser and see a WordPress instance using the TwentyTwentyFour theme.
@@ -54,11 +54,72 @@ Uncomment this line in your `docker-compose.yml`:
 # - ./composer.lock:/var/www/composer.lock # uncomment this when this is no longer a template
 ```
 
-Grep for all instances of `kdc-` and change them to whatever you want. That is just an identifier to help stop your custom plugins and themes from being ignored in git - the identifier can be whatever.
+Grep for all instances of `kdc` and change them to whatever you want. That is just an identifier to help stop your custom plugins and themes from being ignored in git, phpcbf, a fix for $PATH, etc - the identifier can be any lowercase ascii string.
 
 Review the files under `tools/local-env/git-hooks/*` and see if you want to replace the files of the same name in `.git/hooks/*`. They contain things like an automatic linter on pre-commit and such.
 
-## How to use it
+## Sample workflow commands
+
+### Add an npm package to your theme
+
+```
+# this container stays running, so we want `exec` instead of `run`
+docker compose exec app bash
+# we are now in the running container
+cd wp-content/themes/kdc-twentytwentyfour
+npm install @wordpress/scripts --save-dev
+# this installs an executable in node_modules/.bin, so we should add node_modules/.bin to the $PATH so we can more easily run it
+set_path node_modules/.bin
+# now we can run wp-scripts instead of having to run ./node_modules/.bin/wp-scripts
+wp-scripts start
+```
+
+### WARNING: if running something like wp-scripts as a one liner, just login as bash
+
+```
+# ok, yes, you can do a one liner. But it's ugly as sin.
+# you need both a login shell so the $PATH fix gets added, 
+#  and you need to navigate to the correct dir in the container
+docker compose exec --workdir="/var/www/html/wp-${PWD##*wp-}" app bash -lc "wp-scripts"
+
+# but this... this is nicer, no?
+docker compose exec app bash
+cd kdc-twentytwentyfour
+wp-scripts
+```
+
+### Change the theme via the wp-cli
+
+```
+# this container does not stay running, so we want `run` instead of `exec`
+docker compose run --rm cli theme activate kdc-twentytwentyfour
+```
+
+### Start an interactive db session via the wp-cli
+
+```
+# this container does not stay running, so we want `run` instead of `exec`
+docker compose run --rm cli db cli
+```
+
+### Install PHPUnit and run it in an interactive container session
+
+```
+docker compose run --rm composer require --dev phpunit/phpunit
+docker compose exec app phpunit -v
+```
+
+### Run phpcbf linter on commit
+
+```
+cat tools/local-env/git-hooks/pre-commit > .git/hooks/pre-commit
+# we can test it like so
+bash .git/hooks/pre-commit
+# but it also fires on commit!
+git commit -am "testing linter"
+```
+
+## Intended workflow
 
 Everything is editable. This projects expects you to run WordPress as a single-site, not a multisite. It expects that the resulting project will be a monolith in terms of code architecture. 
 
@@ -66,17 +127,17 @@ You can expand on the Dockerfiles in `./images.` The are intended to be multi-st
 
 The containers are super lightweight right now. I figured it's easier to start with tooling separated from the container than the other way around. 
 
-The containers that should continue running after `docker compose up` are `webserver`, `php`, and `db`.
+The containers that should continue running after `docker compose up` are `webserver`, `app`, and `db`.
 
 This means that you can access them as they are running as something like:
 
 ```
 # for an interactive container
-docker compose exec php bash
+docker compose exec app bash
 
 # for a one liner that returns you back to the host machine
 # btw, this is how you'd run any tooling executable you install through composer
-docker compose exec php bash -c "../vendor/bin/phpcbf --standard=WordPress wp-content/*/kdc-*" 
+docker compose exec app ../vendor/bin/phpcbf wp-content/*/kdc-*
 ```
 
 The containers that should stop after `docker compose up` are `composer` and `cli`. All that `docker compose up` is doing in this situation is building them so they exist in the docker cache when you run them later.

@@ -10,6 +10,7 @@ FROM base AS dev
 # this group will exist in all containers, and will be the same group as the user editing code on the local machine.
 # this makes it so the containers and local machine can all play nice with each other.
 USER root
+
 ENV LOCAL_MACHINE_GID=1000
 RUN addgroup -g ${LOCAL_MACHINE_GID} dev
 
