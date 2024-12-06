@@ -19,7 +19,7 @@ services:
     # These get parsed automagically now. See "Using environment variables in nginx configuration" at https://hub.docker.com/_/nginx/
     environment:
       SERVER_NAME: ${SERVER_NAME}
-      PHP_FPM_CONTAINER: php
+      PHP_FPM_CONTAINER: app
 
     volumes:
       - wordpress:/var/www/html
@@ -29,7 +29,7 @@ services:
       
 
     depends_on:
-      php:
+      app:
         condition: service_started
       db:
         condition: service_healthy
@@ -54,10 +54,10 @@ services:
   ##
   # The PHP-FPM container that only holds WordPress
   ##
-  php:
+  app:
     build:
       context: ./images
-      dockerfile: php.Dockerfile
+      dockerfile: app.Dockerfile
       target: dev
       args:
         LOCAL_PHP_VERSION: ${LOCAL_PHP_VERSION}
@@ -126,6 +126,9 @@ services:
         LOCAL_PHP_VERSION: ${LOCAL_PHP_VERSION}
         LOCAL_MACHINE_GID: ${LOCAL_MACHINE_GID-1000}
         LOCAL_MACHINE_UID: ${LOCAL_MACHINE_UID-1000}
+    
+    # this is not ran when you run the container like `docker compose run cli bash`
+    command: wp core install --url=${SERVER_NAME} --title=Example --admin_user=admin --admin_password=password --admin_email=admin@${SERVER_NAME}
 
     networks:
       - default
@@ -133,7 +136,7 @@ services:
     env_file: .env
 
     depends_on:
-      php:
+      app:
         condition: service_started
       db:
         condition: service_healthy
@@ -143,7 +146,6 @@ services:
       - vendor:/var/www/vendor
       - ./wp-content:/var/www/html/wp-content
       
-
     # The init directive ensures the command runs with a PID > 1, so Ctrl+C works correctly.
     init: true
 
@@ -156,14 +158,16 @@ services:
       - vendor:/var/www/vendor
       - ./wp-content:/var/www/html/wp-content
       - ./composer.json:/var/www/composer.json
-      # - ./composer.lock:/var/www/composer.lock # uncomment this when this is no longer a template
+      # - ./composer.lock:/var/www/composer.lock # uncomment this when this is no longer a template and restart the container
 
     working_dir: /var/www/
 
-
+    # this is not ran when you run the container like `docker compose run composer composer`
+    command: composer install
 
 volumes:
   db:
+  node_modules:
   vendor:
   wordpress:
   

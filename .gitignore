@@ -20,3 +20,11 @@ wp-config.php
 # if monolith, prefix our themes and plugins so we can exclude them from ignore
 !/wp-content/themes/kdc-*
 !/wp-content/plugins/kdc-*
+
+# ignore node_modules from themes or plugins tho
+/wp-content/themes/kdc-*/node_modules
+/wp-content/plugins/kdc-*/node_modules
+
+# ignore anything under /build in themes and plugins
+/wp-content/themes/kdc-*/build
+/wp-content/plugins/kdc-*/build
