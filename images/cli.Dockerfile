@@ -2,9 +2,7 @@
 
 # syntax=docker/dockerfile:1
 ARG  LOCAL_PHP_VERSION=8.3
-FROM wordpress:cli-php${LOCAL_PHP_VERSION} AS base
-
-FROM base AS dev
+FROM wordpress:cli-php${LOCAL_PHP_VERSION} AS dev
 
 # creating a new group inside the container so group_add can be used in the dockerfile.
 # this group will exist in all containers, and will be the same group as the user editing code on the local machine.

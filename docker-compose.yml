@@ -5,12 +5,9 @@ services:
   ##
   webserver:
     build:
-      context: ./images
-      dockerfile: webserver.Dockerfile
+      context: .
+      dockerfile: images/webserver.Dockerfile
       target: dev
-      args:
-        LOCAL_MACHINE_GID: ${LOCAL_MACHINE_GID-1000}
-        LOCAL_MACHINE_UID: ${LOCAL_MACHINE_UID-1000}
     
     networks:
       - default
@@ -26,7 +23,7 @@ services:
       - vendor:/var/www/vendor 
       - ./tools/local-env/nginx.conf.template:/etc/nginx/templates/default.conf.template
       - ./wp-content:/var/www/html/wp-content # if you leave this out, nginx can't find uploaded files, despite them existing on your local machine
-      
+      - ./extra-wp-config.php:/var/www/html/extra-wp-config.php
 
     depends_on:
       app:
@@ -56,14 +53,12 @@ services:
   ##
   app:
     build:
-      context: ./images
-      dockerfile: app.Dockerfile
+      context: .
+      dockerfile: images/app.Dockerfile
       target: dev
       args:
         LOCAL_PHP_VERSION: ${LOCAL_PHP_VERSION}
-        LOCAL_MACHINE_GID: ${LOCAL_MACHINE_GID-1000}
-        LOCAL_MACHINE_UID: ${LOCAL_MACHINE_UID-1000}
-
+    
     networks:
       - default
 
@@ -97,9 +92,14 @@ services:
 
     networks:
       - default
+      - proxy
 
-    ports:
-      - "3306"
+    labels:
+        - traefik.enable=true
+        - traefik.tcp.routers.db-tcp.rule=HostSNI(`*`)
+        - traefik.tcp.routers.db-tcp.entrypoints=mysql
+        - traefik.tcp.routers.db-tcp.service=db-proxy
+        - traefik.tcp.services.db-proxy.loadbalancer.server.port=3306
 
     environment:
       MARIADB_USER: ${WORDPRESS_DB_USER}
@@ -122,13 +122,11 @@ services:
   ##
   cli:
     build:
-      context: ./images
-      dockerfile: cli.Dockerfile
+      context: .
+      dockerfile: images/cli.Dockerfile
       target: dev
       args:
         LOCAL_PHP_VERSION: ${LOCAL_PHP_VERSION}
-        LOCAL_MACHINE_GID: ${LOCAL_MACHINE_GID-1000}
-        LOCAL_MACHINE_UID: ${LOCAL_MACHINE_UID-1000}
     
     # this is not ran when you run the container like `docker compose run cli bash`
     command: wp core install --url=${SERVER_NAME} --title="WordPress Test" --admin_user=admin --admin_password=password --admin_email=admin@${SERVER_NAME} --skip-email
@@ -137,6 +135,10 @@ services:
       - default
 
     env_file: .env
+
+    environment:
+      WORDPRESS_CONFIG_EXTRA: |
+        require_once ABSPATH . 'extra-wp-config.php';
 
     depends_on:
       app:
@@ -148,6 +150,7 @@ services:
       - wordpress:/var/www/html
       - vendor:/var/www/vendor
       - ./wp-content:/var/www/html/wp-content
+      - ./extra-wp-config.php:/var/www/html/extra-wp-config.php
       
     # The init directive ensures the command runs with a PID > 1, so Ctrl+C works correctly.
     init: true

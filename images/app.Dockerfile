@@ -1,53 +1,28 @@
 # syntax=docker/dockerfile:1
 ARG  LOCAL_PHP_VERSION=8.3
-FROM wordpress:php${LOCAL_PHP_VERSION}-fpm AS base
+FROM wordpress:php${LOCAL_PHP_VERSION}-fpm AS dev
+ENV LOCAL_PHP_VERSION=${LOCAL_PHP_VERSION}
 
-FROM base AS dev
+ENV LOCAL_MACHINE_GID=1000
+ENV LOCAL_MACHINE_UID=1000
+RUN usermod -u ${LOCAL_MACHINE_UID} -o www-data && groupmod -g ${LOCAL_MACHINE_GID} -o www-data
 
-# grab all the executables from node's image. 
-# this is faster than downloading and installing everything.
-COPY --from=node:23-slim /usr/local/bin /usr/local/bin
+# if we copy this over directly, we replace the wordpress image's docker-entrypoint
+COPY --from=node:23-slim /usr/local/bin /tmp/usr/local/bin
 COPY --from=node:23-slim /usr/local/lib/node_modules /usr/local/lib/node_modules
 COPY --from=node:23-slim /opt /opt
 
-# creating a new group inside the container so group_add can be used in the dockerfile.
-# this group will exist in all containers, and will be the same group as the user editing code on the local machine.
-# this makes it so the containers and local machine can all play nice with each other.
-ENV LOCAL_MACHINE_GID=1000
-RUN groupmod --gid 1000 www-data
+# move over all the node executables without the docker-entrypoint.sh from the node image
+# fix all the permissions issues
+RUN rm -f /tmp/usr/local/bin/docker-entrypoint.sh; \
+    cp -r /tmp/usr/local/bin /usr/local; \
+    mkdir -p /home/www-data; \
+    chown -R www-data /home/www-data; \
+    chown -R www-data /var
 
-# this exists since if you're not running Docker Desktop, certain folders will change to 1033:1033 on your local machine,
-# rendering them unwritable to the local machine user.
-ENV LOCAL_MACHINE_UID=1000
-RUN usermod --gid 1000 --uid 1000 www-data
+USER www-data
 
-RUN <<"BASHRC" cat >> /root/.bashrc 
+# add both the node_modules bin and the composer vendor bin dirs to path so the executables work how you'd expect
+ENV PATH="${PATH}:/var/www/vendor/bin:/var/www/html/wp-content/themes/kdc-twentytwentyfour/node_modules/.bin"
 
-node_modules_bins=$(
-    # add all node_modules in all project-prefixed themes and plugins
-    find /var/www/html/wp-content/*/${PROJECT_PREFIX}-*/node_modules -maxdepth 0 -type d \
-        | sed 's_$_/.bin_' \
-        | tr '\n' ':' \
-        | sed 's/:$//'
-)
-
-# also add in the composer bin dir incase it's ever used
-export PATH="${PATH}:${node_modules_bins}:/var/www/vendor/bin"
-
-# can be used to easily add in a new path while container is up.
-# handy for testing things.
-set_path(){
-    for i in "$@";
-    do
-        # Check if the directory exists
-        [ -d "$i" ] || continue
-
-        # Check if it is not already in your $PATH.
-        echo "$PATH" | grep -Eq "(^|:)$i(:|$)" && continue
-
-        # Then append it to $PATH and export it
-        export PATH="${PATH}:$i"
-    done
-}
-
-BASHRC
+EXPOSE 9000
