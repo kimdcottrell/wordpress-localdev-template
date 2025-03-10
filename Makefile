@@ -9,9 +9,7 @@ nuke: ## Kill your entire system's Docker containers and prune all containers, i
 	-docker ps -aq | xargs --no-run-if-empty docker kill 
 	docker system prune -af --volumes
 
-hard-reset: nuke init 
-
-composer:
+composer: ## Puts you into a container that has composer on it
 	docker compose run --rm composer bash
 
 coffee: ## Get your terminal caffeinated
