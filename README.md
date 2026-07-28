@@ -1,4 +1,4 @@
-# A Localdev: WordPress 6, PHP 8, MySQL/MariaDB, Composer, WP CLI, & WP-Scripts
+# A Localdev: WordPress 7, PHP 8, MySQL/MariaDB, Composer, WP CLI, & WP-Scripts
 
 Why does this exist?
 

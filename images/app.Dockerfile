@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-ARG  LOCAL_PHP_VERSION=8.3
+ARG  LOCAL_PHP_VERSION=8.5
 FROM wordpress:php${LOCAL_PHP_VERSION}-fpm AS dev
 ENV LOCAL_PHP_VERSION=${LOCAL_PHP_VERSION}
 
